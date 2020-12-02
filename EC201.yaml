@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+# App Test
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: ananti
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  AMIPameter:
+    Type: String
+    Default: ami-0493ab99920f410fc
+    Description: The Server AMI to use.
+  InstanceTypeParameter: 
+    Type: String
+    Default: t3.large
+  SubnetIdPameter:
+    Type: String
+    Default: subnet-0a65273c5b34a19dd
+Resources:
+  WebInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp2    
+      InstanceType: !Ref InstanceTypeParameter
+      ImageId: !Ref AMIPameter
+      KeyName: !Ref KeyName
+      Monitoring: true      
+      SecurityGroupIds:
+        - sg-0d0bf9bffa07c08e4
+      SubnetId: !Ref SubnetIdPameter
+      Tags:
+        -
+          Key: Name
+          Value: APP TEST
