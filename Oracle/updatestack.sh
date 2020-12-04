@@ -1,0 +1,1 @@
+aws cloudformation update-stack --stack-name $1 --template-body file://oracle.yaml --parameters file://param.json  --profile mzc

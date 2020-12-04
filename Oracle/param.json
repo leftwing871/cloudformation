@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "SubnetID1",
+    "ParameterValue": "subnet-07695ce4e894a8e13"
+  }, 
+  {
+    "ParameterKey": "SubnetID2",
+    "ParameterValue": "subnet-08ce72e52c5c1e023"
+  }, 
+  {
+    "ParameterKey": "DBName",
+    "ParameterValue": "drupaldb"
+  }, 
+  {
+    "ParameterKey": "DBName",
+    "ParameterValue": "drupaldb"
+  }, 
+  {
+    "ParameterKey": "DBUsername",
+    "ParameterValue": "drupaldb"
+  }, 
+  {
+    "ParameterKey": "DBPassword",
+    "ParameterValue": "drupaldb"
+  }, 
+  {
+    "ParameterKey": "DBClass",
+    "ParameterValue": "db.t3.small"
+  }, 
+  {
+    "ParameterKey": "VPCID",
+    "ParameterValue": "vpc-090c3868840a4b6b2"
+  }
+]
