@@ -79,6 +79,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: {Ref: PublicSubnetA1CIDR}
+      MapPublicIpOnLaunch: True
       AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list       
       Tags:
       - Key: Name
@@ -88,6 +89,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: {Ref: PublicSubnetB1CIDR}
+      MapPublicIpOnLaunch: True
       AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the first AZ in the list       
       Tags:
       - Key: Name
@@ -97,6 +99,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: {Ref: PublicSubnetC1CIDR}
+      MapPublicIpOnLaunch: True
       AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the first AZ in the list       
       Tags:
       - Key: Name
