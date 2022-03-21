@@ -1,0 +1,522 @@
+AWSTemplateFormatVersion: 2010-09-09
+# This CloudFormation template deploys a basic VPC / Network / BastionInstance.
+Parameters:
+  CidrBlock:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.0.0/16
+    Description: VPC CIDR Block (eg 10.0.0.0/16)
+    Type: String
+  PublicSubnetA1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.0.0/24
+    Description: VPC CIDR Block for the Public Subnet (eg 10.0.0.0/24)
+    Type: String
+  PublicSubnetB1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.1.0/24
+    Description: VPC CIDR Block for the Public Subnet (eg 10.0.1.0/24)
+    Type: String      
+  PublicSubnetC1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.2.0/24
+    Description: VPC CIDR Block for the Public Subnet (eg 10.0.2.0/24)
+    Type: String
+  PrivateSubnetA1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.3.0/24
+    Description: VPC CIDR Block for the PrivateA1 Subnet (eg 10.0.3.0/24)
+    Type: String
+  PrivateSubnetB1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.4.0/24
+    Description: VPC CIDR Block for the PrivateC1 Subnet (eg 10.0.4.0/24)
+    Type: String   
+  PrivateSubnetC1CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.5.0/24
+    Description: VPC CIDR Block for the PrivateC1 Subnet (eg 10.0.5.0/24)
+    Type: String
+  PrivateSubnetA2CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.6.0/24
+    Description: VPC CIDR Block for the PrivateA2 Subnet (eg 10.0.6.0/24)
+    Type: String
+  PrivateSubnetB2CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.7.0/24
+    Description: VPC CIDR Block for the PrivateA2 Subnet (eg 10.0.7.0/24)
+    Type: String
+  PrivateSubnetC2CIDR:
+    AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
+    Default: 10.0.8.0/24
+    Description: VPC CIDR Block for the PrivateC2 Subnet (eg 10.0.8.0/24)
+    Type: String
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Default: ACCOUNTID_REGION.pem
+  BastionInstanceType:
+    Description: Amazon EC2 Instance Type
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - m5.large
+      - m5.xlarge
+      - r5.large
+      - r5.xlarge
+    ConstraintDescription: Must be a valid EC2 instance type.     
+Resources:
+  # First, a VPC:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock:
+        Ref: CidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value:  !Join ['', [!Ref "AWS::StackName", "-VPC" ]]
+  # Our VPC will need internet access:     
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: VPC
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    # Notice how you can't attach an IGW to a VPC unless both are created:
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicSubnetA1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PublicSubnetA1CIDR}
+      MapPublicIpOnLaunch: True
+      AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list       
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Public-A1
+  PublicSubnetB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PublicSubnetB1CIDR}
+      MapPublicIpOnLaunch: True
+      AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the first AZ in the list       
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Public-B1
+  PublicSubnetC1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PublicSubnetC1CIDR}
+      MapPublicIpOnLaunch: True
+      AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the first AZ in the list       
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Public-C1
+  PrivateSubnetA1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetA1CIDR}
+      AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-A1
+  PrivateSubnetB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetB1CIDR}
+      AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the first AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-B1
+  PrivateSubnetC1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetC1CIDR}
+      AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the second AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-C1
+  PrivateSubnetA2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetA2CIDR}
+      AvailabilityZone: !Select [ 0, !GetAZs ]    # Get the first AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-A2
+  PrivateSubnetB2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetB2CIDR}
+      AvailabilityZone: !Select [ 1, !GetAZs ]    # Get the second AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-B2   
+  PrivateSubnetC2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: {Ref: PrivateSubnetC2CIDR}
+      AvailabilityZone: !Select [ 2, !GetAZs ]    # Get the second AZ in the list 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-Private-C2        
+  # Some route tables for our subnets:
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: PublicRouteTable
+  PublicRoute1:   # Public route table has direct routing to IGW:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway  
+  # Here is a private route table:
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: PrivateRouteTable
+  PrivateRoute1:            # Private route table can access web via NAT (created below)
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      # Route traffic through the NAT Gateway:
+      NatGatewayId: !Ref NATGateway
+  # A NAT Gateway:
+  NATGateway:
+   Type: AWS::EC2::NatGateway
+   Properties:
+     AllocationId: !GetAtt ElasticIPAddress.AllocationId
+     SubnetId: !Ref PublicSubnetA1
+     Tags:
+     - Key: Name
+       Value: !Sub NAT-${AWS::StackName}
+  ElasticIPAddress:
+   Type: AWS::EC2::EIP
+   Properties:
+     Domain: VPC
+  # Attach the public subnets to public route tables,
+  # and attach the private subnets to private route tables:   
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA1
+      RouteTableId: !Ref PublicRouteTable
+  PublicSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB1
+      RouteTableId: !Ref PublicRouteTable      
+  PublicSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetC1
+      RouteTableId: !Ref PublicRouteTable
+  PrivateSubnetA1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA1
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetB1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB1
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetC1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetC1
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetA2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA2
+      RouteTableId: !Ref PrivateRouteTable
+  PrivateSubnetB2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB2
+      RouteTableId: !Ref PrivateRouteTable   
+  PrivateSubnetC2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetC2
+      RouteTableId: !Ref PrivateRouteTable   
+  ## Security Group
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - "-"
+          - - Ref: AWS::StackName
+            - BastionSecurityGroup
+      GroupDescription: Enable SSH access via port 22
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
+        Description: Allows SSH access to EC2 Instance
+  ## EC2
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          InstallAndRun:
+            - Install
+        Install:
+          packages:
+            yum:
+              tree: []
+              httpd: []
+              php: []
+          files:
+            /var/www/html/index.php:
+              content: !Join
+                - ''
+                - - |
+                    <html>
+                  - |2
+                      <head>
+                  - |2
+                        <title>AWS CloudFormation PHP Sample</title>
+                  - |2
+                        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+                  - |2
+                      </head>
+                  - |2
+                      <body>
+                  - |2
+                        <h1>Welcome to the AWS CloudFormation PHP Sample</h1>
+                  - |2
+                        <p/>
+                  - |2
+                        <?php
+                  - |2
+                          // Print out the current data and time
+                  - |2
+                          print "The Current Date and Time is: <br/>";
+                  - |2
+                          print date("g:i A l, F j Y.");
+                  - |2
+                        ?>
+                  - |2
+                        <p/>
+                  - |2
+                        <?php
+                  - |2
+                          // Setup a handle for CURL
+                  - |2
+                          $curl_handle=curl_init();
+                  - |2
+                          curl_setopt($curl_handle,CURLOPT_CONNECTTIMEOUT,2);
+                  - |2
+                          curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
+                  - |2
+                          // Get the hostname of the intance from the instance metadata
+                  - |2
+                          curl_setopt($curl_handle,CURLOPT_URL,'http://169.254.169.254/latest/meta-data/public-hostname');
+                  - |2
+                          $hostname = curl_exec($curl_handle);
+                  - |2
+                          if (empty($hostname))
+                  - |2
+                          {
+                  - |2
+                            print "Sorry, for some reason, we got no hostname back <br />";
+                  - |2
+                          }
+                  - |2
+                          else
+                  - |2
+                          {
+                  - |2
+                            print "Server = " . $hostname . "<br />";
+                  - |2
+                          }
+                  - |2
+                          // Get the instance-id of the intance from the instance metadata
+                  - |2
+                          curl_setopt($curl_handle,CURLOPT_URL,'http://169.254.169.254/latest/meta-data/instance-id');
+                  - |2
+                          $instanceid = curl_exec($curl_handle);
+                  - |2
+                          if (empty($instanceid))
+                  - |2
+                          {
+                  - |2
+                            print "Sorry, for some reason, we got no instance id back <br />";
+                  - |2
+                          }
+                  - |2
+                          else
+                  - |2
+                          {
+                  - |2
+                            print "EC2 instance-id = " . $instanceid . "<br />";
+                  - |2
+                          }
+                  - |2
+                        ?>
+                  - |2
+                        <h2>PHP Information</h2>
+                  - |2
+                        <p/>
+                  - |2
+                        <?php
+                  - |2
+                          phpinfo();
+                  - |2
+                        ?>
+                  - |2
+                      </body>
+                  - |
+                    </html>
+              mode: '000600'
+              owner: apache
+              group: apache
+            /etc/cfn/cfn-hup.conf:
+              content: !Join
+                - ''
+                - - |
+                    [main]
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - |+
+
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - |+
+
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - |
+                    [cfn-auto-reloader-hook]
+                  - |
+                    triggers=post.update
+                  - >
+                    path=Resources.BastionInstance.Metadata.AWS::CloudFormation::Init
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - '         --stack '
+                  - !Ref 'AWS::StackName'
+                  - '         --resource BastionInstance '
+                  - '         --configsets InstallAndRun '
+                  - '         --region '
+                  - !Ref 'AWS::Region'
+                  - |+
+
+                  - |
+                    runas=root
+              mode: '000400'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf                  
+    Properties:
+      InstanceType: !Ref BastionInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Join:
+          - "-"
+          - - Ref: AWS::StackName
+            - BastionInstance
+      BlockDeviceMappings:
+      - DeviceName: "/dev/xvda"
+        Ebs:
+          DeleteOnTermination: 'true'
+          VolumeSize: '10'
+          VolumeType: gp2
+      ImageId: 
+        Fn::FindInMap:
+        - RegionMap
+        - !Ref AWS::Region
+        - BASTAMI
+      SubnetId: !Ref PublicSubnetA1
+      SecurityGroupIds:
+      - !GetAtt BastionSecurityGroup.GroupId      
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - |
+              yum update -y aws-cfn-bootstrap
+            - |
+              # Install the files and packages from the metadata
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource BastionInstance '
+            - '         --configsets InstallAndRun '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |
+              # Signal the status from cfn-init
+            - '/opt/aws/bin/cfn-signal -e $? '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource BastionInstance '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M      
+Mappings:
+  RegionMap:
+    us-east-1:
+      "BASTAMI" : "ami-077a6363df8e6b81a" # Virginia - Updated July 09, 2019
+      "WASAMI" : "ami-077a6363df8e6b81a" # Virginia - Updated July 09, 2019
+    us-east-2:
+      "BASTAMI" : "ami-0b2cd90e595b4fbdf" # Ohio - Updated July 09, 2019
+      "WASAMI" : "ami-0b2cd90e595b4fbdf" # Ohio - Updated July 09, 2019
+    ap-northeast-2:
+      "BASTAMI" : "ami-0029dbeb91e3b0f5f" # Seoul - Updated March 01, 2022
+      "WASAMI" : "ami-0029dbeb91e3b0f5f" # Seoul - Updated March 01, 2022     
