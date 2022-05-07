@@ -5,6 +5,8 @@
   ```
   aws cloudformation create-stack --stack-name ProductA --template-body file://Network.yml
   aws cloudformation create-stack --stack-name ProductB --template-body file://Network03.yaml --parameters ParameterKey=KeyName,ParameterValue=YOUR_KEY
+  aws cloudformation create-stack --stack-name String --template-body file://string.yaml --capabilities "CAPABILITY_IAM"
+aws cloudformation create-stack --stack-name StringExample --template-body file://string_example.yaml  --parameters ParameterKey=InputString,ParameterValue=DevOpsEng --capabilities "CAPABILITY_AUTO_EXPAND"
   ```
 ### Wait 
   ```
