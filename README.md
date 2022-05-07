@@ -4,6 +4,7 @@
 ## Create Stack
   ```
   aws cloudformation create-stack --stack-name ProductA --template-body file://Network.yml
+  aws cloudformation create-stack --stack-name ProductB --template-body file://Network03.yaml --parameters ParameterKey=KeyName,ParameterValue=YOUR_KEY
   ```
 ### Wait 
   ```
