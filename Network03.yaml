@@ -519,4 +519,7 @@ Mappings:
       "WASAMI" : "ami-0b2cd90e595b4fbdf" # Ohio - Updated July 09, 2019
     ap-northeast-2:
       "BASTAMI" : "ami-0029dbeb91e3b0f5f" # Seoul - Updated March 01, 2022
-      "WASAMI" : "ami-0029dbeb91e3b0f5f" # Seoul - Updated March 01, 2022     
+      "WASAMI" : "ami-0029dbeb91e3b0f5f" # Seoul - Updated March 01, 2022
+    ap-southeast-2:
+      "BASTAMI" : "ami-07620139298af599e" # Seoul - Updated June 01, 2022
+      "WASAMI" : "ami-07620139298af599e" # Seoul - Updated June 01, 2022           
