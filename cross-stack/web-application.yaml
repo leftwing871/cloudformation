@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Application Template
+
+######################
+# Parameters section
+######################
+
+Parameters:
+
+  NetworkStackName:
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: '^[a-zA-Z][-a-zA-Z0-9]*$'
+    Default: base-network
+
+  AmazonLinuxAMIID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2
+
+######################
+# Resources section
+######################
+
+Resources:
+
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          All:
+            - ConfigureSampleApp
+        ConfigureSampleApp:
+          packages:
+            yum:
+              httpd: []
+              php: []
+          files:
+            /var/www/html/index.php:
+              content: |
+                <!DOCTYPE html>
+                <html>
+                <body>
+                  <center>
+                    <?php
+                    # Get the instance ID from meta-data and store it in the $instance_id variable
+                    $url = "http://169.254.169.254/latest/meta-data/instance-id";
+                    $instance_id = file_get_contents($url);
+                    # Get the instance's availability zone from metadata and store it in the $zone variable
+                    $url = "http://169.254.169.254/latest/meta-data/placement/availability-zone";
+                    $zone = file_get_contents($url);
+                    ?>
+                    <h2>EC2 Instance ID: <?php echo $instance_id ?></h2>
+                    <h2>Availability Zone: <?php echo $zone ?></h2>
+                  </center>
+                </body>
+                </html>
+              mode: 000644
+              owner: apache
+              group: apache
+          services:
+            sysvinit:
+              httpd:
+                enabled: true
+                ensureRunning: true
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !Ref AmazonLinuxAMIID
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref WebServerSecurityGroup
+          AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          DeleteOnTermination: true
+          SubnetId:
+            Fn::ImportValue:
+              !Sub ${NetworkStackName}-SubnetID
+      Tags:
+        - Key: Name
+          Value: MyWebServer
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum update -y aws-cfn-bootstrap
+          # Install the files and packages from the metadata
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource WebServerInstance --configsets All --region ${AWS::Region}
+          # Signal the status from cfn-init
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerInstance --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP ingress
+      VpcId:
+        Fn::ImportValue:
+          !Sub ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: MyWebServer Security Group
+
+######################
+# Outputs section
+######################
+
+Outputs:
+  URL:
+    Description: URL of the sample website
+    Value: !Sub 'http://${WebServerInstance.PublicIp}'
+  BaseNetworkVpcId:
+    Description: base network's VPCID
+    Value: !Sub '${WebServerSecurityGroup.VpcId}'

@@ -1,0 +1,21 @@
+[Create Stack]
+mzc_solutions_architect:~/environment/crossstack $ aws cloudformation create-stack --stack-name base-network --template-body file://base-network.yaml
+{
+    "StackId": "arn:aws:cloudformation:ap-northeast-2:961770019511:stack/base-network/78e6d6f0-148a-11ed-9887-0aa01782fc0a"
+}
+
+[cross-stack reference]
+mzc_solutions_architect:~/environment/crossstack $ aws cloudformation create-stack --stack-name web-application --template-body file://web-application.yaml --parameters ParameterKey=NetworkStackName,ParameterValue=base-network                                                                                                                
+{
+    "StackId": "arn:aws:cloudformation:ap-northeast-2:961770019511:stack/web-application/46880650-148c-11ed-b225-0681dd9194fa"
+}
+
+[update stack]
+mzc_solutions_architect:~/environment/crossstack $ aws cloudformation update-stack --stack-name web-application --template-body file://web-application2.yaml --parameters ParameterKey=NetworkStackName,ParameterValue=base-network
+{
+    "StackId": "arn:aws:cloudformation:ap-northeast-2:961770019511:stack/web-application/46880650-148c-11ed-b225-0681dd9194fa"
+}
+
+[delete stack]
+mzc_solutions_architect:~/environment/crossstack $ aws cloudformation delete-stack --stack-name web-application
+
