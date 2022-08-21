@@ -200,7 +200,7 @@ Resources:
   ElasticIPAddress:
    Type: AWS::EC2::EIP
    Properties:
-     Domain: VPC
+     Domain: vpc
   # Attach the public subnets to public route tables,
   # and attach the private subnets to private route tables:   
   PublicSubnetARouteTableAssociation:
