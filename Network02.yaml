@@ -312,6 +312,7 @@ Resources:
       SubnetId: !Ref PublicSubnetA1
       SecurityGroupIds:
       - !GetAtt BastionSecurityGroup.GroupId
+      IamInstanceProfile: SSMDefaultRoleForAAAAReporting
 Mappings:
   RegionMap:
     us-east-1:
