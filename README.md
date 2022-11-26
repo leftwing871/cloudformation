@@ -32,4 +32,5 @@ aws cloudformation create-stack --stack-name StringExample --template-body file:
   - [Application frameworks](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/sample-templates-appframeworks-ap-northeast-2.html)
   - [Sample template Services](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/sample-templates-services-ap-northeast-2.html#w2ab1c33c32c13b7)
   - [Macro Examples](https://github.com/awslabs/aws-cloudformation-templates/tree/master/aws/services/CloudFormation/MacrosExamples)
+  - [AWS Quick Starts](https://aws.amazon.com/ko/solutions/)
 
