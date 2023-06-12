@@ -327,3 +327,8 @@ Mappings:
     ap-southeast-2:
       "BASTAMI" : "ami-07620139298af599e" # Seoul - Updated June 01, 2022
       "WASAMI" : "ami-07620139298af599e" # Seoul - Updated June 01, 2022       
+Outputs:
+  BastionInstancePublicIp:
+    Value: !GetAtt BastionInstance.PublicIp
+  BastionInstancePublicDnsName:
+    Value: !GetAtt BastionInstance.PublicDnsName
