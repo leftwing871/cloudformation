@@ -248,3 +248,27 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnetC2
       RouteTableId: !Ref PrivateRouteTable   
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP ingress
+      GroupName: WebServerSecurityGroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Allows Web access to EC2 Instance 
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+          Description: Allows SSH access to EC2 Instance          
+      Tags:
+        - Key: Name
+          Value: WebServerSecurityGroup
+Outputs:
+  VPCId:
+    Description: VPCID
+    Value: !Sub '${WebServerSecurityGroup.VpcId}'
